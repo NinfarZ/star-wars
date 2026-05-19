@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { useParams, Link, Navigate } from "react-router";
 import { type Film, type Person, type Species, type Vehicle, type Starship } from "../../types/swapi";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useLinkedResources } from "../../hooks/useLinkedResources";
+import { LinkedResourceList } from '../../components/LinkedResourceList';
 import ItemsSkeleton from "../../components/ItemsSkeleton";
 
 function DetailRow({
@@ -22,54 +22,6 @@ function DetailRow({
   );
 }
 
-const FilmsList = ({ urls }: { urls: string[] }) => {
-  const results = useLinkedResources<Film>('film', urls);
-  return (
-    <ul className=" text-sm space-y-1">
-      {results.map(({ data: film }, i) => {
-        const id = urls[i].split('/').at(-2);
-        return <li key={urls[i]}>- <Link to={`/films/${id}`} className="hover:text-[#FFE81F]">{film.title}</Link></li>;
-      })}
-    </ul>
-  );
-};
-
-const PersonSpeciesList = ({ urls }: { urls: string[] }) => {
-  const results = useLinkedResources<Species>('species', urls);
-  return (
-    <ul className=" text-sm space-y-1">
-      {results.map(({ data: species }, i) => {
-        const id = urls[i].split('/').at(-2);
-        return <li key={urls[i]}>- <Link to={`/species/${id}`} className="hover:text-[#FFE81F]">{species.name}</Link></li>;
-      })}
-    </ul>
-  );
-};
-
-const PersonVehiclesList = ({ urls }: { urls: string[] }) => {
-  const results = useLinkedResources<Vehicle>('vehicle', urls);
-  return (
-    <ul className=" text-sm space-y-1">
-      {results.map(({ data: vehicle }, i) => {
-        const id = urls[i].split('/').at(-2);
-        return <li key={urls[i]}>- <Link to={`/vehicles/${id}`} className="hover:text-[#FFE81F]">{vehicle.name}</Link></li>;
-      })}
-    </ul>
-  );
-};
-
-const PersonStarshipsList = ({ urls }: { urls: string[] }) => {
-  const results = useLinkedResources<Starship>('starship', urls);
-  return (
-    <ul className=" text-sm space-y-1">
-      {results.map(({ data: starship }, i) => {
-        const id = urls[i].split('/').at(-2);
-        return <li key={urls[i]}>- <Link to={`/starships/${id}`} className="hover:text-[#FFE81F]">{starship.name}</Link></li>;
-      })}
-    </ul>
-  );
-};
-
 export default function PeopleDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -81,7 +33,7 @@ export default function PeopleDetailPage() {
       const res = await fetch(`https://swapi.py4e.com/api/people/${id}/`);
       return res.json();
     },
-    staleTime: Infinity, // person details don't change, so we can cache indefinitely
+    staleTime: Infinity,
   });
 
   return (
@@ -113,7 +65,7 @@ export default function PeopleDetailPage() {
         <div>
             <h2 className="text-[#FFE81F] text-xs font-bold tracking-[0.3em] uppercase mb-5">Films</h2>
           <Suspense fallback={<ItemsSkeleton count={person.films.length} />}>
-            <FilmsList urls={person.films} />
+            <LinkedResourceList<Film> urls={person.films} queryKey="film" routePath="films" getLabel={(film) => film.title} />
           </Suspense>
         </div>
 
@@ -121,7 +73,7 @@ export default function PeopleDetailPage() {
           <div>
             <h2 className="text-[#FFE81F] text-xs font-bold tracking-[0.3em] uppercase mb-5 mt-5">Species</h2>
             <Suspense fallback={<ItemsSkeleton count={person.species.length} />}>
-              <PersonSpeciesList urls={person.species} />
+              <LinkedResourceList<Species> urls={person.species} queryKey="species" routePath="species" getLabel={(species) => species.name} />
             </Suspense>
           </div>
         )}
@@ -130,7 +82,7 @@ export default function PeopleDetailPage() {
           <div>
             <h2 className="text-[#FFE81F] text-xs font-bold tracking-[0.3em] uppercase mb-5 mt-5">Vehicles</h2>
             <Suspense fallback={<ItemsSkeleton count={person.vehicles.length} />}>
-              <PersonVehiclesList urls={person.vehicles} />
+              <LinkedResourceList<Vehicle> urls={person.vehicles} queryKey="vehicle" routePath="vehicles" getLabel={(vehicle) => vehicle.name} />
             </Suspense>
           </div>
         )}
@@ -139,7 +91,7 @@ export default function PeopleDetailPage() {
           <div>
             <h2 className="text-[#FFE81F] text-xs font-bold tracking-[0.3em] uppercase mb-5 mt-5">Starships</h2>
             <Suspense fallback={<ItemsSkeleton count={person.starships.length} />}>
-              <PersonStarshipsList urls={person.starships} />
+              <LinkedResourceList<Starship> urls={person.starships} queryKey="starship" routePath="starships" getLabel={(starship) => starship.name} />
             </Suspense>
           </div>
         )}

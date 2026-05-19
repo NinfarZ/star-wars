@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { useParams, Link, Navigate } from "react-router";
 import { type Film, type Person, type Planet, type Species } from "../../types/swapi";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useLinkedResources } from "../../hooks/useLinkedResources";
+import { LinkedResourceList } from '../../components/LinkedResourceList';
 import ItemsSkeleton from "../../components/ItemsSkeleton";
 
 function DetailRow({
@@ -75,7 +75,7 @@ export default function SpeciesDetailPage() {
         <div>
           <h2 className="text-[#FFE81F] text-xs font-bold tracking-[0.3em] uppercase mb-5">Films</h2>
           <Suspense fallback={<ItemsSkeleton count={species.films.length} />}>
-            <FilmsList urls={species.films} />
+            <LinkedResourceList<Film> urls={species.films} queryKey="film" routePath="films" getLabel={(film) => film.title} />
           </Suspense>
         </div>
 
@@ -83,7 +83,7 @@ export default function SpeciesDetailPage() {
           <div>
             <h2 className="text-[#FFE81F] text-xs font-bold tracking-[0.3em] uppercase mb-5 mt-5">People</h2>
             <Suspense fallback={<ItemsSkeleton count={species.people.length} />}>
-              <PeopleList urls={species.people} />
+              <LinkedResourceList<Person> urls={species.people} queryKey="person" routePath="people" getLabel={(person) => person.name} />
             </Suspense>
           </div>
         )}
@@ -113,26 +113,3 @@ const SpeciesHomeworld = ({ url }: { url: string }) => {
   );
 };
 
-const FilmsList = ({ urls }: { urls: string[] }) => {
-  const results = useLinkedResources<Film>('film', urls);
-  return (
-    <ul className="flex gap-2">
-      {results.map(({ data: film }, i) => {
-        const id = urls[i].split('/').at(-2);
-        return <li key={urls[i]}>- <Link to={`/films/${id}`}>{film.title}</Link></li>;
-      })}
-    </ul>
-  );
-};
-
-const PeopleList = ({ urls }: { urls: string[] }) => {
-  const results = useLinkedResources<Person>('person', urls);
-  return (
-    <ul className="flex gap-2 flex-wrap">
-      {results.map(({ data: person }, i) => {
-        const id = urls[i].split('/').at(-2);
-        return <li key={urls[i]}>- <Link to={`/people/${id}`}>{person.name}</Link></li>;
-      })}
-    </ul>
-  );
-};
